@@ -25,12 +25,6 @@ const app = express();
 /* ================= MIDDLEWARE ================= */
 app.use(
   cors({
-<<<<<<< HEAD
-    origin: [
-      "http://localhost:5173",                 // ✅ local frontend
-      "https://pet-pal-front.onrender.com"     // ✅ deployed frontend
-    ],
-=======
     origin: (origin, callback) => {
       const allowedOrigins = [
         "https://pet-pal-front.onrender.com",
@@ -45,7 +39,6 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
->>>>>>> a9305a6 (offer)
     credentials: true,
   })
 );
