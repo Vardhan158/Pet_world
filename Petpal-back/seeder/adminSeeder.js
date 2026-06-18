@@ -17,12 +17,16 @@ export const seedAdmin = async () => {
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
     const existingAdmin = await Admin.findOne({ email: adminEmail });
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
     if (existingAdmin) {
-      console.log("Admin already exists:", existingAdmin.email);
+      console.log("Admin exists. Updating password to match current .env...");
+      existingAdmin.password = hashedPassword;
+      existingAdmin.confirmPassword = hashedPassword;
+      await existingAdmin.save();
+      console.log("Admin password updated successfully.");
       return;
     }
-
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     const admin = await Admin.create({
       name: "Super Admin",

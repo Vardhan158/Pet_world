@@ -102,13 +102,8 @@ export const loginUser = async (req, res) => {
 
     /* ===================== ADMIN ===================== */
     const admin = await Admin.findOne({ email });
-      console.log("Admin login: entered email:", email);
-      console.log("Admin login: found admin:", admin);
     if (admin) {
-        console.log("Admin login: entered password:", password);
-        console.log("Admin login: hashed password from DB:", admin.password);
       const isMatch = await bcrypt.compare(password, admin.password);
-        console.log("Admin login: bcrypt isMatch:", isMatch);
 
       if (!isMatch) {
         return res.status(401).json({
@@ -126,15 +121,9 @@ export const loginUser = async (req, res) => {
     }
 
     /* ===================== SELLER ===================== */
-      // Debug: log all sellers to verify collection
-      const allSellers = await Seller.find({});
-      console.log("All sellers:", allSellers.map(s => s.email));
     const seller = await Seller.findOne({ email });
     if (seller) {
-      console.log("[SELLER LOGIN] Entered password:", password);
-      console.log("[SELLER LOGIN] Hashed password from DB:", seller.password);
       const isMatch = await bcrypt.compare(password, seller.password);
-      console.log("[SELLER LOGIN] bcrypt isMatch:", isMatch);
 
       if (!isMatch) {
         return res.status(401).json({

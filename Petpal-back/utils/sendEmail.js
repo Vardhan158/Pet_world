@@ -1,45 +1,51 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 /**
- * Sends an email using Brevo SMTP or Gmail as fallback
+ * Sends an email using Brevo's REST API (Highly recommended for Render/Heroku)
  */
 export const sendEmail = async (to, subject, html) => {
   try {
-    // Use Brevo SMTP if available, otherwise fallback to standard EMAIL_USER/PASS
-    const user = process.env.BREVO_USER || process.env.EMAIL_USER;
-    const pass = process.env.BREVO_PASS || process.env.EMAIL_PASS;
-    const fromEmail = process.env.BREVO_FROM_EMAIL || process.env.EMAIL_USER;
+    const apiKey = process.env.BREVO_API_KEY;
+    const fromEmail = process.env.BREVO_FROM_EMAIL || "harshavardhandevang@gmail.com";
     const fromName = process.env.EMAIL_FROM_NAME || "PetPal World";
 
-    if (!user || !pass) {
-      throw new Error("Email configuration missing (BREVO_USER/PASS)");
+    if (!apiKey) {
+      throw new Error("BREVO_API_KEY is missing in environment variables");
     }
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user,
-        pass,
+    console.log(`📨 Attempting to send email via Brevo API to: ${to}`);
+
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": apiKey
       },
+      body: JSON.stringify({
+        sender: {
+          name: fromName,
+          email: fromEmail
+        },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: html
+      })
     });
 
-    const mailOptions = {
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject,
-      html,
-    };
+    const result = await response.json();
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`📧 Email sent successfully: ${info.messageId}`);
-    return info;
+    if (!response.ok) {
+      console.error("❌ Brevo API Error Response:", result);
+      throw new Error(result.message || "Failed to send email via Brevo API");
+    }
+
+    console.log(`📧 Email sent successfully! Message ID: ${result.messageId}`);
+    return result;
   } catch (error) {
-    console.error("❌ Error sending email:", error.message);
-    throw error; // Re-throw so the controller knows it failed
+    console.error("❌ Send Email Error:", error.message);
+    throw error;
   }
 };
