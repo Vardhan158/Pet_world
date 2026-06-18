@@ -3,8 +3,8 @@ import axios from "axios";
 
 // Use localhost in development, production URL in production
 const baseURL = import.meta.env.DEV 
-  ? "http://localhost:5001/api"
-  : "https://pet-pal-x74f.onrender.com/api";
+  ? "http://localhost:5000/api"
+  : "https://pet-world-backend.onrender.com/api";
 
 const axiosInstance = axios.create({
   baseURL,

@@ -12,7 +12,7 @@ export default function RealtimeNotifications() {
     const token = localStorage.getItem("token");
     if (!user || !token || !window.EventSource) return;
 
-    const apiBaseUrl = axiosInstance.defaults.baseURL || "https://pet-pal-x74f.onrender.com/api";
+    const apiBaseUrl = axiosInstance.defaults.baseURL || "https://pet-world-backend.onrender.com/api";
     const streamUrl = `${apiBaseUrl}/notifications/stream?token=${encodeURIComponent(token)}`;
     const source = new EventSource(streamUrl);
 

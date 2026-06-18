@@ -1,6 +1,6 @@
 // src/components/OfferBanner.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../api/utils/axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ── Inject Poppins ── */
@@ -157,7 +157,7 @@ export default function OfferBanner() {
 
   const fetchActiveOffer = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/offers");
+      const { data } = await axiosInstance.get("/offers");
       setOffer(data.success && data.offer ? data.offer : null);
     } catch {
       setOffer(null);

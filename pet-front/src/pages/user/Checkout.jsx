@@ -361,7 +361,7 @@ export default function Checkout() {
     const loaded = await loadRazorpayScript();
     if (!loaded) { toast.error("Razorpay SDK failed to load ❌"); return; }
     try {
-      const { data } = await axios.post("http://localhost:5000/api/payments/create-order", { amount: totalPrice });
+      const { data } = await axiosInstance.post("/payments/create-order", { amount: totalPrice });
       if (!data.success) { toast.error("Unable to create Razorpay order ❌"); return; }
       const dbOrder = await createOrderInDB(null, "Razorpay", data.order.id);
       if (!dbOrder) return;
@@ -372,14 +372,14 @@ export default function Checkout() {
         order_id: data.order.id,
         handler: async (response) => {
           try {
-            const verify = await axios.post("http://localhost:5000/api/payments/verify-payment", {
+            const verify = await axiosInstance.post("/payments/verify-payment", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
             if (verify.data.success) {
               toast.success("Payment Verified 🎉");
-              await axios.put("http://localhost:5000/api/orders/mark-paid", {
+              await axiosInstance.put("/orders/mark-paid", {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
               }, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
@@ -399,7 +399,7 @@ export default function Checkout() {
     if (!couponCode.trim()) { toast.error("Please enter a coupon code"); return; }
     setCouponLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/offers");
+      const { data } = await axiosInstance.get("/offers");
       if (!data.success || !data.offer) { toast.error("No active offers available"); return; }
       const offer = data.offer;
       if (!offer.isActive) { toast.error("This offer is not currently active"); return; }
