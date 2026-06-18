@@ -8,6 +8,10 @@ import User from "../models/userModel.js";
    🔐 JWT TOKEN GENERATOR
 ===================================================== */
 const generateToken = (id, role) => {
+  if (!process.env.JWT_SECRET) {
+    console.error("❌ JWT_SECRET is missing from environment variables");
+    throw new Error("Internal configuration error");
+  }
   return jwt.sign(
     { id, role },
     process.env.JWT_SECRET,
@@ -53,9 +57,9 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Register Error:", error.message);
+    console.error("❌ Register Error:", error);
     return res.status(500).json({
-      message: "Server error during registration",
+      message: error.message || "Server error during registration",
     });
   }
 };
