@@ -10,7 +10,7 @@ import RealtimeNotifications from "./components/RealtimeNotifications";
 
 // 🏠 Pages
 import Home from "./pages/Home";
-import LoginSignup from "./pages/LoginSignup";
+import LoginSignup from "./pages/user/LoginSignup";
 import PetDetail from "./pages/PetDetail";
 import Wishlist from "./pages/Wishlist";
 import CartPage from "./pages/CartPage";

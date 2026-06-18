@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import Admin from "../models/adminModel.js";
 import Seller from "../models/sellerModel.js";
 import User from "../models/userModel.js";
+import OTP from "../models/otpModel.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 /* =====================================================
    🔐 JWT TOKEN GENERATOR
@@ -22,31 +24,53 @@ const generateToken = (id, role) => {
 /* =====================================================
    🧍 USER REGISTRATION (CUSTOMER ONLY)
 ===================================================== */
-export const registerUser = async (req, res) => {
+export const sendOtp = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message: "Name, email, and password are required",
-      });
-    }
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({
-        message: "User already exists",
-      });
+    if (existingUser) return res.status(409).json({ message: "User already exists" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await OTP.deleteMany({ email });
+    await OTP.create({ email, otp });
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2 style="color: #6366f1;">Welcome to PetPal! 🐾</h2>
+        <p>Your verification code is:</p>
+        <h1 style="background: #f3f4f6; padding: 10px; display: inline-block; letter-spacing: 5px; color: #1e1b4b;">${otp}</h1>
+        <p>This code expires in 10 minutes.</p>
+      </div>
+    `;
+
+    await sendEmail(email, "Verify your PetPal Account", html);
+    res.status(200).json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("❌ Send OTP Error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+export const registerUser = async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+
+    if (!name || !email || !password || !otp) {
+      return res.status(400).json({ message: "All fields and OTP are required" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const otpRecord = await OTP.findOne({ email, otp });
+    if (!otpRecord) return res.status(400).json({ message: "Invalid or expired OTP" });
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: "user",
-    });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(409).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword, role: "user" });
+
+    await OTP.deleteMany({ email });
 
     return res.status(201).json({
       _id: user._id,
@@ -55,12 +79,9 @@ export const registerUser = async (req, res) => {
       role: user.role,
       token: generateToken(user._id, user.role),
     });
-
   } catch (error) {
     console.error("❌ Register Error:", error);
-    return res.status(500).json({
-      message: error.message || "Server error during registration",
-    });
+    return res.status(500).json({ message: error.message || "Server error during registration" });
   }
 };
 
